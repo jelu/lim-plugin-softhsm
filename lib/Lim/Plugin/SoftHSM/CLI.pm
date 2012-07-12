@@ -42,10 +42,7 @@ sub configs {
 		if ($call->Successful) {
 		    $self->cli->println('SoftHSM config files found:');
 		    if (exists $response->{file}) {
-		        unless (ref($response->{file}) eq 'ARRAY') {
-		            $response->{file} = [ $response->{file} ];
-		        }
-		        foreach my $file (@{$response->{file}}) {
+		        foreach my $file (ref($response->{file}) eq 'ARRAY' ? @{$response->{file}} : $response->{file}) {
 		            $self->cli->println($file->{name},
 		              ' (readable: ', ($file->{read} ? 'yes' : 'no'),
 		              ' writable: ', ($file->{read} ? 'yes' : 'no'),
@@ -53,7 +50,6 @@ sub configs {
 		              );
 		        }
 		    }
-
 			$self->Successful;
 		}
 		else {
@@ -88,7 +84,17 @@ sub config {
                 my ($call, $response) = @_;
                 
                 if ($call->Successful) {
-                    $self->cli->println($response->{file}->{content});
+        		    if (exists $response->{file}) {
+        		        foreach my $file (ref($response->{file}) eq 'ARRAY' ? @{$response->{file}} : $response->{file}) {
+        		            if (ref($response->{file}) eq 'ARRAY') {
+        		                $file->{content} =~ s/^/$file->{name}: /gm;
+                                $self->cli->println($file->{content});
+        		            }
+        		            else {
+                                $self->cli->println($file->{content});
+        		            }
+        		        }
+        		    }
                 	$self->Successful;
                 }
                 else {
