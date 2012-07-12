@@ -99,7 +99,7 @@ sub Calls {
         },
         CreateInitToken => {
             in => {
-                slot => {
+                token => {
                     slot => 'integer',
                     label => 'string',
                     so_pin => 'integer',

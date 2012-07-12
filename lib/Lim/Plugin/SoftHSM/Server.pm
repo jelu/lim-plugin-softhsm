@@ -6,6 +6,9 @@ use Fcntl qw(:seek);
 use File::Temp ();
 use IO::File ();
 use Digest::SHA ();
+use AnyEvent ();
+use AnyEvent::Util ();
+use Scalar::Util qw(weaken);
 
 use Lim::Plugin::SoftHSM ();
 
@@ -255,9 +258,45 @@ sub ReadShowSlots {
 =cut
 
 sub CreateInitToken {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
     
-    $self->Error($cb, 'Not Implemented');
+    if (exists $q->{token}) {
+        my @tokens = ref($q->{token}) eq 'ARRAY' ? @{$q->{token}} : ($q->{token});
+        if (scalar @tokens) {
+            weaken($self);
+            my $cmd_cb; $cmd_cb = sub {
+                if (my $token = shift(@tokens)) {
+                    my ($stdout, $stderr);
+                    # TODO check input, handle optional --options
+                    my $cv = AnyEvent::Util::run_cmd
+                        [
+                            'softhsm',
+                            '--init-token',
+                            '--slot', $token->{slot},
+                            '--label', $token->{label},
+                            '--so-pin', $token->{so_pin},
+                            '--pin', $token->{pin}
+                        ],
+                        '<', '/dev/null',
+                        '>', \$stdout,
+                        '2>', \$stderr;
+                    $cv->cb (sub {
+                        if (shift->recv) {
+                            $self->Error($cb, 'Unable to create token ', $token->{label});
+                            return;
+                        }
+                        $cmd_cb->();
+                    });
+                }
+                else {
+                    $self->Successful($cb);
+                }
+            };
+            $cmd_cb->();
+            return;
+        }
+    }
+    $self->Successful($cb);
 }
 
 =head2 function1
