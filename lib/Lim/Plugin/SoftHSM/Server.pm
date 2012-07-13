@@ -250,7 +250,29 @@ sub DeleteConfig {
 sub ReadShowSlots {
     my ($self, $cb) = @_;
     
-    $self->Error($cb, 'Not Implemented');
+    my ($stderr);
+    my $cv = AnyEvent::Util::run_cmd
+        [
+            'softhsm',
+            '--show-slots'
+        ],
+        '<', '/dev/null',
+        '>', sub {
+            my ($data) = @_;
+            
+            if (defined $data) {
+                # TODO parse data
+            }
+        },
+        '2>', \$stderr;
+    $cv->cb(sub {
+        if (shift->recv) {
+            $self->Error($cb, 'Unable to read slots');
+        }
+        else {
+            $self->Successful($cb);
+        }
+    });
 }
 
 =head2 function1

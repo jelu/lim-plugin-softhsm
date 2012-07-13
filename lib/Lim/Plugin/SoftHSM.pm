@@ -89,8 +89,8 @@ sub Calls {
         ReadShowSlots => {
             out => {
                 slot => {
-                    slot => 'integer',
-                    label => 'string',
+                    id => 'integer',
+                    token_label => 'string',
                     token_present => 'bool',
                     token_initialized => 'bool',
                     user_pin_initialized => 'bool',
