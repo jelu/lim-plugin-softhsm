@@ -291,7 +291,7 @@ sub ReadShowSlots {
         return;
     }
     
-    my ($stderr);
+    my ($stderr, @slots, $slot, $data);
     my $cv = AnyEvent::Util::run_cmd
         [
             'softhsm',
@@ -299,10 +299,14 @@ sub ReadShowSlots {
         ],
         '<', '/dev/null',
         '>', sub {
-            my ($data) = @_;
-            
-            if (defined $data) {
-                # TODO parse data
+            if (defined $_[0]) {
+                $data .= $_[0];
+                
+                while ($data =~ s/^([^\r\n]*)\r?\n//o) {
+                    my $line = $1;
+                    
+                    # TODO parse data
+                }
             }
         },
         '2>', \$stderr;
