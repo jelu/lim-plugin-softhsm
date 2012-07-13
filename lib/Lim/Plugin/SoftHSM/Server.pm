@@ -35,6 +35,9 @@ our %ConfigFiles = (
     ]
 );
 
+sub SOFTHSM_VERSION_MIN (){ 1003000 }
+sub SOFTHSM_VERSION_MAX (){ 1003003 }
+
 =head1 SYNOPSIS
 
 ...
@@ -48,8 +51,41 @@ our %ConfigFiles = (
 sub Init {
     my $self = shift;
     my %args = ( @_ );
+
+    $self->{bin} = {
+        softhsm => 0
+    };
     
-    $self->{config} = {};
+    my ($stdout, $stderr);
+    my $cv = AnyEvent::Util::run_cmd [ 'softhsm', '--version' ],
+        '<', '/dev/null',
+        '>', \$stdout,
+        '2>', \$stderr;
+    if ($cv->recv) {
+        $self->{logger}->warn('Unable to find "softhsm" executable, module functions limited');
+    }
+    else {
+        if ($stdout =~ /^([0-9]+)\.([0-9]+)\.([0-9]+)/o) {
+            my ($major,$minor,$patch) = ($1, $2, $3);
+            
+            if ($major > 0 and $major < 10 and $minor > -1 and $minor < 10 and $patch > -1 and $patch < 100) {
+                my $version = ($major * 1000000) + ($minor * 1000) + $patch;
+                
+                unless ($version >= SOFTHSM_VERSION_MIN and $version <= SOFTHSM_VERSION_MAX) {
+                    $self->{logger}->warn('Unsupported "softhsm" executable version, unable to continue');
+                }
+                else {
+                    $self->{bin}->{softhsm} = $version;
+                }
+            }
+            else {
+                $self->{logger}->warn('Invalid "softhsm" version, module functions limited');
+            }
+        }
+        else {
+            $self->{logger}->warn('Unable to get "softhsm" version, module functions limited');
+        }
+    }
 }
 
 =head2 function1
@@ -250,6 +286,11 @@ sub DeleteConfig {
 sub ReadShowSlots {
     my ($self, $cb) = @_;
     
+    unless ($self->{bin}->{softhsm}) {
+        $self->Error($cb, 'No "softhsm" executable found or unsupported version, unable to continue');
+        return;
+    }
+    
     my ($stderr);
     my $cv = AnyEvent::Util::run_cmd
         [
@@ -281,6 +322,11 @@ sub ReadShowSlots {
 
 sub CreateInitToken {
     my ($self, $cb, $q) = @_;
+    
+    unless ($self->{bin}->{softhsm}) {
+        $self->Error($cb, 'No "softhsm" executable found or unsupported version, unable to continue');
+        return;
+    }
     
     if (exists $q->{token}) {
         my @tokens = ref($q->{token}) eq 'ARRAY' ? @{$q->{token}} : ($q->{token});
