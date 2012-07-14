@@ -158,6 +158,50 @@ sub config {
     $self->Error;
 }
 
+=head2 function1
+
+=cut
+
+sub show {
+    my ($self, $cmd) = @_;
+    my ($getopt, $args) = Getopt::Long::GetOptionsFromString($cmd);
+    
+    unless ($getopt and scalar @$args) {
+        $self->Error;
+        return;
+    }
+
+    if ($args->[0] eq 'slots') {
+        my $softhsm = Lim::Plugin::SoftHSM->Client;
+        weaken($self);
+        $softhsm->ReadShowSlots(sub {
+            my ($call, $response) = @_;
+            
+            if ($call->Successful) {
+    		    if (exists $response->{slot}) {
+    		        $self->cli->println(join("\t", 'Slot', 'Token Label', 'Token Present', 'Token Initialized', 'User Pin Initialized'));
+    		        foreach my $slot (ref($response->{slot}) eq 'ARRAY' ? @{$response->{slot}} : $response->{slot}) {
+    		            $self->cli->println(join("\t",
+                            $slot->{id},
+                            $slot->{token_label},
+                            $slot->{token_present} ? 'Yes' : 'No',
+                            $slot->{token_initialized} ? 'Yes' : 'No',
+                            $slot->{user_pin_initialized} ? 'Yes' : 'No'
+    		            ));
+    		        }
+    		    }
+            	$self->Successful;
+            }
+            else {
+            	$self->Error($call->Error);
+            }
+            undef($softhsm);
+        });
+        return;
+    }
+    $self->Error;
+}
+
 =head1 AUTHOR
 
 Jerry Lundström, C<< <lundstrom.jerry at gmail.com> >>

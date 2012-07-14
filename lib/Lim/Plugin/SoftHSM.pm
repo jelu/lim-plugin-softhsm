@@ -165,6 +165,9 @@ sub Commands {
         config => {
             view => 1,
             edit => 1
+        },
+        show => {
+            slots => 1
         }
     };
 }
