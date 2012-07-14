@@ -305,7 +305,45 @@ sub ReadShowSlots {
                 while ($data =~ s/^([^\r\n]*)\r?\n//o) {
                     my $line = $1;
                     
-                    # TODO parse data
+                    if ($line =~ /^Slot\s+([0-9]+)/o) {
+                        if (defined $slot) {
+                            push(@slots, $slot);
+                        }
+                        $slot = {
+                            id => $1
+                        };
+                    }
+                    elsif (!defined $slot) {
+                        next;
+                    }
+                    elsif ($line =~ /Token\s+present:\s+(\w+)/o) {
+                        if (lc($1) eq 'yes') {
+                            $slot->{token_present} = 1;
+                        }
+                        else {
+                            $slot->{token_present} = 0;
+                        }
+                    }
+                    elsif ($line =~ /Token\s+initialized:\s+(\w+)/o) {
+                        if (lc($1) eq 'yes') {
+                            $slot->{token_initialized} = 1;
+                        }
+                        else {
+                            $slot->{token_initialized} = 0;
+                        }
+                    }
+                    elsif ($line =~ /User\s+PIN\s+initialized:\s+(\w+)/o) {
+                        if (lc($1) eq 'yes') {
+                            $slot->{user_pin_initialized} = 1;
+                        }
+                        else {
+                            $slot->{user_pin_initialized} = 0;
+                        }
+                    }
+                    elsif ($line =~ /Token\s+label:\s+(\w+)/o) {
+                        # TODO spaces in token label??
+                        $slot->{token_label} = $1;
+                    }
                 }
             }
         },
@@ -315,7 +353,18 @@ sub ReadShowSlots {
             $self->Error($cb, 'Unable to read slots');
         }
         else {
-            $self->Successful($cb);
+            if (defined $slot) {
+                push(@slots, $slot);
+            }
+            if (scalar @slots == 1) {
+                $self->Successful($cb, { slot => $slots[0] });
+            }
+            elsif (scalar @slots) {
+                $self->Successful($cb, { slot => \@slots });
+            }
+            else {
+                $self->Successful($cb);
+            }
         }
     });
 }
