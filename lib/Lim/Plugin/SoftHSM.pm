@@ -41,6 +41,9 @@ sub Module {
 
 sub Calls {
     {
+        #
+        # Calls for config files
+        #
         ReadConfigs => {
             out => {
                 file => {
@@ -86,6 +89,9 @@ sub Calls {
                 }
             }
         },
+        #
+        # Calls for softhsm executable tool
+        #
         ReadShowSlots => {
             out => {
                 slot => {
