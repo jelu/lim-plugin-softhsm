@@ -3,7 +3,6 @@ package Lim::Plugin::SoftHSM::Server;
 use common::sense;
 
 use Fcntl qw(:seek);
-use File::Temp ();
 use IO::File ();
 use Digest::SHA ();
 use AnyEvent ();
@@ -221,7 +220,7 @@ sub UpdateConfig {
             if (exists $files->{$read->{name}}) {
                 my $file = $files->{$read->{name}};
 
-                if ($file->{write} and defined (my $tmp = File::Temp->new)) {
+                if ($file->{write} and defined (my $tmp = Lim::Util::TempFileLikeThis($file->{name}))) {
                     print $tmp $read->{content};
                     $tmp->flush;
                     $tmp->close;
