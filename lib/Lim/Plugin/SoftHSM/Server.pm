@@ -400,7 +400,7 @@ sub CreateInitToken {
                         '<', '/dev/null',
                         '>', \$stdout,
                         '2>', \$stderr;
-                    $cv->cb (sub {
+                    $cv->cb(sub {
                         if (shift->recv) {
                             $self->Error($cb, 'Unable to create token ', $token->{label});
                             return;
