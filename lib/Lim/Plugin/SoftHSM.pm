@@ -41,6 +41,15 @@ sub Module {
 
 sub Calls {
     {
+        ReadVersion => {
+            out => {
+                version => 'string required',
+                program => {
+                    name => 'string required',
+                    version => 'string required'
+                }
+            }
+        },
         #
         # Calls for config files
         #
@@ -167,6 +176,7 @@ sub Calls {
 
 sub Commands {
     {
+        version => 1,
         configs => 1,
         config => {
             view => 1,

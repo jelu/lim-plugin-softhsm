@@ -54,6 +54,7 @@ sub Init {
     $self->{bin} = {
         softhsm => 0
     };
+    $self->{version} = {};
     
     my ($stdout, $stderr);
     my $cv = AnyEvent::Util::run_cmd [ 'softhsm', '--version' ],
@@ -75,6 +76,7 @@ sub Init {
                 }
                 else {
                     $self->{bin}->{softhsm} = $version;
+                    $self->{version}->{softhsm} = $major.'.'.$minor.'.'.$patch;
                 }
             }
             else {
@@ -131,6 +133,26 @@ sub _ScanConfig {
     }
     
     return \%file;
+}
+
+=head2 function1
+
+=cut
+
+sub ReadVersion {
+    my ($self, $cb) = @_;
+    my @program;
+    
+    if ($self->{version}->{softhsm}) {
+        push(@program, { name => 'softhsm', version => $self->{version}->{softhsm} });
+    }
+
+    if (scalar @program) {
+        $self->Successful($cb, { version => $VERSION, program => \@program });
+    }
+    else {
+        $self->Successful($cb, { version => $VERSION });
+    }
 }
 
 =head2 function1
