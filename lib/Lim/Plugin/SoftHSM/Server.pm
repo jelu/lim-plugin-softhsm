@@ -5,8 +5,6 @@ use common::sense;
 use Fcntl qw(:seek);
 use IO::File ();
 use Digest::SHA ();
-use AnyEvent ();
-use AnyEvent::Util ();
 use Scalar::Util qw(weaken);
 
 use Lim::Plugin::SoftHSM ();
@@ -57,7 +55,7 @@ sub Init {
     $self->{version} = {};
     
     my ($stdout, $stderr);
-    my $cv = AnyEvent::Util::run_cmd [ 'softhsm', '--version' ],
+    my $cv = Lim::Util::run_cmd [ 'softhsm', '--version' ],
         '<', '/dev/null',
         '>', \$stdout,
         '2>', \$stderr;
@@ -187,41 +185,40 @@ sub ReadConfig {
     my $files = $self->_ScanConfig;
     my $result = {};
 
-    if (exists $q->{file}) {
-        foreach my $read (ref($q->{file}) eq 'ARRAY' ? @{$q->{file}} : $q->{file}) {
-            if (exists $files->{$read->{name}}) {
-                my $file = $files->{$read->{name}};
-                
-                if ($file->{read} and defined (my $fh = IO::File->new($file->{name}))) {
-                    my ($tell, $content);
-                    $fh->seek(0, SEEK_END);
-                    $tell = $fh->tell;
-                    $fh->seek(0, SEEK_SET);
-                    if ($fh->read($content, $tell) == $tell) {
-                        if (exists $result->{file}) {
-                            unless (ref($result->{file}) eq 'ARRAY') {
-                                $result->{file} = [ $result->{file} ];
-                            }
-                            push(@{$result->{file}}, {
-                                name => $file->{name},
-                                content => $content
-                            });
-                        }
-                        else {
-                            $result->{file} = {
-                                name => $file->{name},
-                                content => $content
-                            };
-                        }
+    foreach my $read (ref($q->{file}) eq 'ARRAY' ? @{$q->{file}} : $q->{file}) {
+        unless (exists $files->{$read->{name}}) {
+            $self->Error($cb, Lim::Error->new(
+                code => 500,
+                message => 'File "'.$read->{name}.'" not found in configuration files'
+            ));
+            return;
+        }
+    }
+    
+    foreach my $read (ref($q->{file}) eq 'ARRAY' ? @{$q->{file}} : $q->{file}) {
+        my $file = $files->{$read->{name}};
+        
+        if ($file->{read} and defined (my $fh = IO::File->new($file->{name}))) {
+            my ($tell, $content);
+            $fh->seek(0, SEEK_END);
+            $tell = $fh->tell;
+            $fh->seek(0, SEEK_SET);
+            if ($fh->read($content, $tell) == $tell) {
+                if (exists $result->{file}) {
+                    unless (ref($result->{file}) eq 'ARRAY') {
+                        $result->{file} = [ $result->{file} ];
                     }
+                    push(@{$result->{file}}, {
+                        name => $file->{name},
+                        content => $content
+                    });
                 }
-            }
-            else {
-                $self->Error($cb, Lim::Error->new(
-                    code => 500,
-                    message => 'File "'.$read->{name}.'" not found in configuration files'
-                ));
-                return;
+                else {
+                    $result->{file} = {
+                        name => $file->{name},
+                        content => $content
+                    };
+                }
             }
         }
     }
@@ -237,53 +234,52 @@ sub UpdateConfig {
     my $files = $self->_ScanConfig;
     my $result = {};
 
-    if (exists $q->{file}) {
-        foreach my $read (ref($q->{file}) eq 'ARRAY' ? @{$q->{file}} : $q->{file}) {
-            if (exists $files->{$read->{name}}) {
-                my $file = $files->{$read->{name}};
+    foreach my $read (ref($q->{file}) eq 'ARRAY' ? @{$q->{file}} : $q->{file}) {
+        unless (exists $files->{$read->{name}}) {
+            $self->Error($cb, Lim::Error->new(
+                code => 500,
+                message => 'File "'.$read->{name}.'" not found in configuration files'
+            ));
+            return;
+        }
+    }
 
-                if ($file->{write} and defined (my $tmp = Lim::Util::TempFileLikeThis($file->{name}))) {
-                    print $tmp $read->{content};
-                    $tmp->flush;
-                    $tmp->close;
-                    
-                    my $fh = IO::File->new;
-                    if ($fh->open($tmp->filename)) {
-                        my ($tell, $content);
-                        $fh->seek(0, SEEK_END);
-                        $tell = $fh->tell;
-                        $fh->seek(0, SEEK_SET);
-                        unless ($fh->read($content, $tell) == $tell) {
-                            $self->Error($cb, Lim::Error->new(
-                                code => 500,
-                                message => 'Failed to write "'.$read->{name}.'" to temporary file'
-                            ));
-                            return;
-                        }
-                        unless (Digest::SHA::sha1_base64($read->{content}) eq Digest::SHA::sha1_base64($content)) {
-                            $self->Error($cb, Lim::Error->new(
-                                code => 500,
-                                message => 'Checksum missmatch on "'.$read->{name}.'" after writing to temporary file'
-                            ));
-                            return;
-                        }
-                        unless (rename($tmp->filename, $file->{name}))
-                        {
-                            $self->Error($cb, Lim::Error->new(
-                                code => 500,
-                                message => 'Failed to rename "'.$read->{name}.'"'
-                            ));
-                            return;
-                        }
-                    }
+    foreach my $read (ref($q->{file}) eq 'ARRAY' ? @{$q->{file}} : $q->{file}) {
+        my $file = $files->{$read->{name}};
+
+        if ($file->{write} and defined (my $tmp = Lim::Util::TempFileLikeThis($file->{name}))) {
+            print $tmp $read->{content};
+            $tmp->flush;
+            $tmp->close;
+            
+            my $fh = IO::File->new;
+            if ($fh->open($tmp->filename)) {
+                my ($tell, $content);
+                $fh->seek(0, SEEK_END);
+                $tell = $fh->tell;
+                $fh->seek(0, SEEK_SET);
+                unless ($fh->read($content, $tell) == $tell) {
+                    $self->Error($cb, Lim::Error->new(
+                        code => 500,
+                        message => 'Failed to write "'.$read->{name}.'" to temporary file'
+                    ));
+                    return;
                 }
-            }
-            else {
-                $self->Error($cb, Lim::Error->new(
-                    code => 500,
-                    message => 'File "'.$read->{name}.'" not found in configuration files'
-                ));
-                return;
+                unless (Digest::SHA::sha1_base64($read->{content}) eq Digest::SHA::sha1_base64($content)) {
+                    $self->Error($cb, Lim::Error->new(
+                        code => 500,
+                        message => 'Checksum missmatch on "'.$read->{name}.'" after writing to temporary file'
+                    ));
+                    return;
+                }
+                unless (rename($tmp->filename, $file->{name}))
+                {
+                    $self->Error($cb, Lim::Error->new(
+                        code => 500,
+                        message => 'Failed to rename "'.$read->{name}.'"'
+                    ));
+                    return;
+                }
             }
         }
     }
@@ -313,7 +309,7 @@ sub ReadShowSlots {
     }
     
     my ($stderr, @slots, $slot, $data);
-    my $cv = AnyEvent::Util::run_cmd
+    Lim::Util::run_cmd
         [
             'softhsm',
             '--show-slots'
@@ -368,26 +364,27 @@ sub ReadShowSlots {
                 }
             }
         },
-        '2>', \$stderr;
-    $cv->cb(sub {
-        if (shift->recv) {
-            $self->Error($cb, 'Unable to read slots');
-        }
-        else {
-            if (defined $slot) {
-                push(@slots, $slot);
-            }
-            if (scalar @slots == 1) {
-                $self->Successful($cb, { slot => $slots[0] });
-            }
-            elsif (scalar @slots) {
-                $self->Successful($cb, { slot => \@slots });
+        '2>', \$stderr,
+        timeout => 15,
+        cb => sub {
+            if (shift->recv) {
+                $self->Error($cb, 'Unable to read slots');
             }
             else {
-                $self->Successful($cb);
+                if (defined $slot) {
+                    push(@slots, $slot);
+                }
+                if (scalar @slots == 1) {
+                    $self->Successful($cb, { slot => $slots[0] });
+                }
+                elsif (scalar @slots) {
+                    $self->Successful($cb, { slot => \@slots });
+                }
+                else {
+                    $self->Successful($cb);
+                }
             }
-        }
-    });
+        };
 }
 
 =head2 function1
@@ -402,41 +399,47 @@ sub CreateInitToken {
         return;
     }
     
-    if (exists $q->{token}) {
-        my @tokens = ref($q->{token}) eq 'ARRAY' ? @{$q->{token}} : ($q->{token});
-        if (scalar @tokens) {
-            weaken($self);
-            my $cmd_cb; $cmd_cb = sub {
-                if (my $token = shift(@tokens)) {
-                    my ($stdout, $stderr);
-                    # TODO check input, handle optional --options
-                    my $cv = AnyEvent::Util::run_cmd
-                        [
-                            'softhsm',
-                            '--init-token',
-                            '--slot', $token->{slot},
-                            '--label', $token->{label},
-                            '--so-pin', $token->{so_pin},
-                            '--pin', $token->{pin}
-                        ],
-                        '<', '/dev/null',
-                        '>', \$stdout,
-                        '2>', \$stderr;
-                    $cv->cb(sub {
+    my @tokens = ref($q->{token}) eq 'ARRAY' ? @{$q->{token}} : ($q->{token});
+    if (scalar @tokens) {
+        weaken($self);
+        my $cmd_cb; $cmd_cb = sub {
+            if (my $token = shift(@tokens)) {
+                my ($stdout, $stderr);
+                unless (length($token->{so_pin}) >= 4 and length($token->{so_pin}) <= 255) {
+                    $self->Error($cb, 'Unable to create token ', $token->{label}, ': so_pin not between 4 and 255 characters');
+                    return;
+                }
+                unless (length($token->{pin}) >= 4 and length($token->{pin}) <= 255) {
+                    $self->Error($cb, 'Unable to create token ', $token->{label}, ': pin not between 4 and 255 characters');
+                    return;
+                }
+                Lim::Util::run_cmd
+                    [
+                        'softhsm',
+                        '--init-token',
+                        '--slot', $token->{slot},
+                        '--label', $token->{label},
+                        '--so-pin', $token->{so_pin},
+                        #'--pin', $token->{pin}
+                    ],
+                    '<', '/dev/null',
+                    '>', \$stdout,
+                    '2>', \$stderr,
+                    timeout => 10,
+                    cb => sub {
                         if (shift->recv) {
                             $self->Error($cb, 'Unable to create token ', $token->{label});
                             return;
                         }
                         $cmd_cb->();
-                    });
-                }
-                else {
-                    $self->Successful($cb);
-                }
-            };
-            $cmd_cb->();
-            return;
-        }
+                    };
+            }
+            else {
+                $self->Successful($cb);
+            }
+        };
+        $cmd_cb->();
+        return;
     }
     $self->Successful($cb);
 }

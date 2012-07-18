@@ -43,10 +43,10 @@ sub Calls {
     {
         ReadVersion => {
             out => {
-                version => 'string required',
+                version => 'string',
                 program => {
-                    name => 'string required',
-                    version => 'string required'
+                    name => 'string',
+                    version => 'string'
                 }
             }
         },
@@ -65,6 +65,7 @@ sub Calls {
         CreateConfig => {
             in => {
                 file => {
+                    '' => 'required',
                     name => 'string',
                     content => 'string'
                 }
@@ -73,6 +74,7 @@ sub Calls {
         ReadConfig => {
             in => {
                 file => {
+                    '' => 'required',
                     name => 'string'
                 }
             },
@@ -86,6 +88,7 @@ sub Calls {
         UpdateConfig => {
             in => {
                 file => {
+                    '' => 'required',
                     name => 'string',
                     content => 'string'
                 }
@@ -94,6 +97,7 @@ sub Calls {
         DeleteConfig => {
             in => {
                 file => {
+                    '' => 'required',
                     name => 'string'
                 }
             }
@@ -115,19 +119,21 @@ sub Calls {
         CreateInitToken => {
             in => {
                 token => {
+                    '' => 'required',
                     slot => 'integer',
                     label => 'string',
-                    so_pin => 'integer',
-                    pin => 'integer'
+                    so_pin => 'string',
+                    pin => 'string'
                 }
             }
         },
         CreateImport => {
             in => {
                 key_pair => {
-                    file_pin => 'integer',
+                    '' => 'required',
+                    file_pin => 'string',
                     slot => 'integer',
-                    pin => 'integer',
+                    pin => 'string',
                     label => 'string',
                     id => 'string'
                 }
@@ -136,9 +142,10 @@ sub Calls {
         ReadExport => {
             in => {
                 key_pair => {
-                    file_pin => 'integer',
+                    '' => 'required',
+                    file_pin => 'string',
                     slot => 'integer',
-                    pin => 'integer',
+                    pin => 'string',
                     id => 'string'
                 }
             },
@@ -150,17 +157,19 @@ sub Calls {
         UpdateOptimize => {
             in => {
                 slot => {
+                    '' => 'required',
                     slot => 'integer',
-                    pin => 'integer'
+                    pin => 'string'
                 }
             }
         },
         UpdateTrusted => {
             in => {
                 key_pair => {
+                    '' => 'required',
                     trusted => 'bool',
                     slot => 'integer',
-                    so_pin => 'integer',
+                    so_pin => 'string',
                     type => 'string',
                     label => 'string',
                     id => 'string'
