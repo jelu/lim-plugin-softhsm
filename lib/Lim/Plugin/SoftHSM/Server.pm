@@ -420,7 +420,7 @@ sub CreateInitToken {
                         '--slot', $token->{slot},
                         '--label', $token->{label},
                         '--so-pin', $token->{so_pin},
-                        #'--pin', $token->{pin}
+                        '--pin', $token->{pin}
                     ],
                     '<', '/dev/null',
                     '>', \$stdout,
