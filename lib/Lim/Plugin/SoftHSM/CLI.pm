@@ -231,6 +231,47 @@ sub show {
     $self->Error;
 }
 
+=head2 function1
+
+=cut
+
+sub init {
+    my ($self, $cmd) = @_;
+    my ($getopt, $args) = Getopt::Long::GetOptionsFromString($cmd);
+    
+    unless ($getopt and scalar @$args) {
+        $self->Error;
+        return;
+    }
+
+    if ($args->[0] eq 'token' and scalar @$args == 5) {
+        my (undef, $slot, $label, $so_pin, $pin) = @$args;
+        my $softhsm = Lim::Plugin::SoftHSM->Client;
+        weaken($self);
+        $softhsm->CreateInitToken({
+            token => {
+                slot => $slot,
+                label => $label,
+                so_pin => $so_pin,
+                pin => $pin
+            }
+        }, sub {
+            my ($call, $response) = @_;
+            
+            if ($call->Successful) {
+                $self->cli->println('Token created');
+            	$self->Successful;
+            }
+            else {
+            	$self->Error($call->Error);
+            }
+            undef($softhsm);
+        });
+        return;
+    }
+    $self->Error;
+}
+
 =head1 AUTHOR
 
 Jerry Lundström, C<< <lundstrom.jerry at gmail.com> >>

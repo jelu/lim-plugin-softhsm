@@ -193,6 +193,9 @@ sub Commands {
         },
         show => {
             slots => 1
+        },
+        init => {
+            token => 1
         }
     };
 }
