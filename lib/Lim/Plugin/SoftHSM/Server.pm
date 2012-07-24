@@ -367,6 +367,9 @@ sub ReadShowSlots {
         '2>', \$stderr,
         timeout => 15,
         cb => sub {
+            unless (defined $self) {
+                return;
+            }
             if (shift->recv) {
                 $self->Error($cb, 'Unable to read slots');
             }
@@ -427,6 +430,9 @@ sub CreateInitToken {
                     '2>', \$stderr,
                     timeout => 10,
                     cb => sub {
+                        unless (defined $self) {
+                            return;
+                        }
                         if (shift->recv) {
                             $self->Error($cb, 'Unable to create token ', $token->{label});
                             return;

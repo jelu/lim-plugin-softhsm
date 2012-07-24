@@ -37,22 +37,27 @@ sub version {
     
     weaken($self);
     $softhsm->ReadVersion(sub {
-		my ($call, $response) = @_;
-		
-		if ($call->Successful) {
-		    $self->cli->println('SoftHSM plugin version ', $response->{version});
-		    if (exists $response->{program}) {
-		        $self->cli->println('SoftHSM programs:');
-		        foreach my $program (ref($response->{program}) eq 'ARRAY' ? @{$response->{program}} : $response->{program}) {
-		            $self->cli->println('    ', $program->{name}, ' version ', $program->{version});
-		        }
-		    }
-			$self->Successful;
-		}
-		else {
-			$self->Error($call->Error);
-		}
-		undef($softhsm);
+        my ($call, $response) = @_;
+        
+        unless (defined $self) {
+            undef($softhsm);
+            return;
+        }
+        
+        if ($call->Successful) {
+            $self->cli->println('SoftHSM plugin version ', $response->{version});
+            if (exists $response->{program}) {
+                $self->cli->println('SoftHSM programs:');
+                foreach my $program (ref($response->{program}) eq 'ARRAY' ? @{$response->{program}} : $response->{program}) {
+                    $self->cli->println('    ', $program->{name}, ' version ', $program->{version});
+                }
+            }
+            $self->Successful;
+        }
+        else {
+            $self->Error($call->Error);
+        }
+        undef($softhsm);
     });
 }
 
@@ -66,25 +71,30 @@ sub configs {
     
     weaken($self);
     $softhsm->ReadConfigs(sub {
-		my ($call, $response) = @_;
-		
-		if ($call->Successful) {
-		    $self->cli->println('SoftHSM config files found:');
-		    if (exists $response->{file}) {
-		        foreach my $file (ref($response->{file}) eq 'ARRAY' ? @{$response->{file}} : $response->{file}) {
-		            $self->cli->println($file->{name},
-		              ' (readable: ', ($file->{read} ? 'yes' : 'no'),
-		              ' writable: ', ($file->{read} ? 'yes' : 'no'),
-		              ')'
-		              );
-		        }
-		    }
-			$self->Successful;
-		}
-		else {
-			$self->Error($call->Error);
-		}
-		undef($softhsm);
+        my ($call, $response) = @_;
+        
+        unless (defined $self) {
+            undef($softhsm);
+            return;
+        }
+        
+        if ($call->Successful) {
+            $self->cli->println('SoftHSM config files found:');
+            if (exists $response->{file}) {
+                foreach my $file (ref($response->{file}) eq 'ARRAY' ? @{$response->{file}} : $response->{file}) {
+                    $self->cli->println($file->{name},
+                      ' (readable: ', ($file->{read} ? 'yes' : 'no'),
+                      ' writable: ', ($file->{read} ? 'yes' : 'no'),
+                      ')'
+                      );
+                }
+            }
+            $self->Successful;
+        }
+        else {
+            $self->Error($call->Error);
+        }
+        undef($softhsm);
     });
 }
 
@@ -112,22 +122,27 @@ sub config {
             }, sub {
                 my ($call, $response) = @_;
                 
+                unless (defined $self) {
+                    undef($softhsm);
+                    return;
+                }
+                
                 if ($call->Successful) {
-        		    if (exists $response->{file}) {
-        		        foreach my $file (ref($response->{file}) eq 'ARRAY' ? @{$response->{file}} : $response->{file}) {
-        		            if (ref($response->{file}) eq 'ARRAY') {
-        		                $file->{content} =~ s/^/$file->{name}: /gm;
+                    if (exists $response->{file}) {
+                        foreach my $file (ref($response->{file}) eq 'ARRAY' ? @{$response->{file}} : $response->{file}) {
+                            if (ref($response->{file}) eq 'ARRAY') {
+                                $file->{content} =~ s/^/$file->{name}: /gm;
                                 $self->cli->println($file->{content});
-        		            }
-        		            else {
+                            }
+                            else {
                                 $self->cli->println($file->{content});
-        		            }
-        		        }
-        		    }
-                	$self->Successful;
+                            }
+                        }
+                    }
+                    $self->Successful;
                 }
                 else {
-                	$self->Error($call->Error);
+                    $self->Error($call->Error);
                 }
                 undef($softhsm);
             });
@@ -145,6 +160,11 @@ sub config {
             }, sub {
                 my ($call, $response) = @_;
                 
+                unless (defined $self) {
+                    undef($softhsm);
+                    return;
+                }
+                
                 if ($call->Successful) {
                     my $w; $w = AnyEvent->timer(
                         after => 0,
@@ -159,25 +179,30 @@ sub config {
                                 }, sub {
                                     my ($call, $response) = @_;
                                     
+                                    unless (defined $self) {
+                                        undef($softhsm);
+                                        return;
+                                    }
+                                    
                                     if ($call->Successful) {
                                         $self->cli->println('Config updated');
-                                    	$self->Successful;
+                                        $self->Successful;
                                     }
                                     else {
-                                    	$self->Error($call->Error);
+                                        $self->Error($call->Error);
                                     }
                                     undef($softhsm);
                                 });
                             }
                             else {
                                 $self->cli->println('Config not update, no change');
-                            	$self->Successful;
+                                $self->Successful;
                             }
                             undef($w);
                         });
                 }
                 else {
-                	$self->Error($call->Error);
+                    $self->Error($call->Error);
                 }
                 undef($softhsm);
             });
@@ -206,23 +231,28 @@ sub show {
         $softhsm->ReadShowSlots(sub {
             my ($call, $response) = @_;
             
+            unless (defined $self) {
+                undef($softhsm);
+                return;
+            }
+            
             if ($call->Successful) {
-    		    if (exists $response->{slot}) {
-    		        $self->cli->println(join("\t", 'Slot', 'Token Label', 'Token Present', 'Token Initialized', 'User Pin Initialized'));
-    		        foreach my $slot (ref($response->{slot}) eq 'ARRAY' ? @{$response->{slot}} : $response->{slot}) {
-    		            $self->cli->println(join("\t",
+                if (exists $response->{slot}) {
+                    $self->cli->println(join("\t", 'Slot', 'Token Label', 'Token Present', 'Token Initialized', 'User Pin Initialized'));
+                    foreach my $slot (ref($response->{slot}) eq 'ARRAY' ? @{$response->{slot}} : $response->{slot}) {
+                        $self->cli->println(join("\t",
                             $slot->{id},
                             $slot->{token_label},
                             $slot->{token_present} ? 'Yes' : 'No',
                             $slot->{token_initialized} ? 'Yes' : 'No',
                             $slot->{user_pin_initialized} ? 'Yes' : 'No'
-    		            ));
-    		        }
-    		    }
-            	$self->Successful;
+                        ));
+                    }
+                }
+                $self->Successful;
             }
             else {
-            	$self->Error($call->Error);
+                $self->Error($call->Error);
             }
             undef($softhsm);
         });
@@ -258,12 +288,17 @@ sub init {
         }, sub {
             my ($call, $response) = @_;
             
+            unless (defined $self) {
+                undef($softhsm);
+                return;
+            }
+            
             if ($call->Successful) {
                 $self->cli->println('Token created');
-            	$self->Successful;
+                $self->Successful;
             }
             else {
-            	$self->Error($call->Error);
+                $self->Error($call->Error);
             }
             undef($softhsm);
         });
