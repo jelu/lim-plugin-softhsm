@@ -442,6 +442,7 @@ sub CreateInitToken {
             }
             else {
                 $self->Successful($cb);
+                undef($cmd_cb);
             }
         };
         $cmd_cb->();
