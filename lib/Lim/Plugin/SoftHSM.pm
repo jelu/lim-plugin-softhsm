@@ -3,14 +3,11 @@ package Lim::Plugin::SoftHSM;
 use common::sense;
 use Carp;
 
-use Log::Log4perl ();
-use Fcntl qw(:seek);
-
 use base qw(Lim::Component);
 
 =head1 NAME
 
-...
+Lim::Plugin::SoftHSM - SoftHSM management plugin for Lim
 
 =head1 VERSION
 
