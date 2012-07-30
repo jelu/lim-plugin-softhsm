@@ -319,6 +319,8 @@ sub ReadShowSlots {
             if (defined $_[0]) {
                 $data .= $_[0];
                 
+                $cb->reset_timeout;
+                
                 while ($data =~ s/^([^\r\n]*)\r?\n//o) {
                     my $line = $1;
                     
@@ -426,7 +428,12 @@ sub CreateInitToken {
                         '--pin', $token->{pin}
                     ],
                     '<', '/dev/null',
-                    '>', \$stdout,
+                    '>', sub {
+                        if (defined $_[0]) {
+                            $cb->reset_timeout;
+                            $stdout .= $_[0];
+                        }
+                    },
                     '2>', \$stderr,
                     timeout => 10,
                     cb => sub {
