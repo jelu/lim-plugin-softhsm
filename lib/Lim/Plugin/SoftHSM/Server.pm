@@ -483,9 +483,52 @@ sub ReadExport {
 =cut
 
 sub UpdateOptimize {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
     
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{softhsm}) {
+        $self->Error($cb, 'No "softhsm" executable found or unsupported version, unable to continue');
+        return;
+    }
+    
+    my @slots = ref($q->{slot}) eq 'ARRAY' ? @{$q->{slot}} : ($q->{slot});
+
+    weaken($self);
+    my $cmd_cb; $cmd_cb = sub {
+        if (my $slot = shift(@slots)) {
+            my ($stdout, $stderr);
+            Lim::Util::run_cmd
+                [
+                    'softhsm',
+                    '--optimize',
+                    '--slot', $slot->{id},
+                    '--pin', $slot->{pin}
+                ],
+                '<', '/dev/null',
+                '>', sub {
+                    if (defined $_[0]) {
+                        $cb->reset_timeout;
+                        $stdout .= $_[0];
+                    }
+                },
+                '2>', \$stderr,
+                timeout => 10,
+                cb => sub {
+                    unless (defined $self) {
+                        return;
+                    }
+                    if (shift->recv) {
+                        $self->Error($cb, 'Unable to optimize softhsm');
+                        return;
+                    }
+                    $cmd_cb->();
+                };
+        }
+        else {
+            $self->Successful($cb);
+            undef($cmd_cb);
+        }
+    };
+    $cmd_cb->();
 }
 
 =head2 function1

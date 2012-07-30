@@ -307,6 +307,53 @@ sub init {
     $self->Error;
 }
 
+=head2 function1
+
+=cut
+
+sub optimize {
+    my ($self, $cmd) = @_;
+    my ($pin);
+    my ($getopt, $args) = Getopt::Long::GetOptionsFromString($cmd,
+        'pin=s' => \$pin
+    );
+    
+    unless ($getopt and scalar @$args and defined $pin) {
+        $self->Error;
+        return;
+    }
+
+    my @slots;
+    foreach (@$args) {
+        push(@slots, {
+            id => $_,
+            pin => $pin
+        });
+    }
+    
+    my $softhsm = Lim::Plugin::SoftHSM->Client;
+    weaken($self);
+    $softhsm->UpdateOptimize({
+        slot => \@slots 
+    }, sub {
+        my ($call, $response) = @_;
+        
+        unless (defined $self) {
+            undef($softhsm);
+            return;
+        }
+        
+        if ($call->Successful) {
+            $self->cli->println('Optimize complete');
+            $self->Successful;
+        }
+        else {
+            $self->Error($call->Error);
+        }
+        undef($softhsm);
+    });
+}
+
 =head1 AUTHOR
 
 Jerry Lundström, C<< <lundstrom.jerry at gmail.com> >>

@@ -155,7 +155,7 @@ sub Calls {
             in => {
                 slot => {
                     '' => 'required',
-                    slot => 'integer',
+                    id => 'integer',
                     pin => 'string'
                 }
             }
@@ -193,7 +193,8 @@ sub Commands {
         },
         init => {
             token => 1
-        }
+        },
+        optimize => 1
     };
 }
 
