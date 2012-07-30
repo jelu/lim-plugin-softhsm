@@ -311,6 +311,62 @@ sub init {
 
 =cut
 
+sub export {
+    my ($self, $cmd) = @_;
+    my ($slot, $pin, $file_pin);
+    my ($getopt, $args) = Getopt::Long::GetOptionsFromString($cmd,
+        'slot=s' => \$slot,
+        'pin=s' => \$pin,
+        'file-pin:s' => \$file_pin
+    );
+    
+    unless ($getopt and scalar @$args and defined $slot and defined $pin) {
+        $self->Error;
+        return;
+    }
+
+    my @key_pairs;
+    foreach (@$args) {
+        push(@key_pairs, {
+            slot => $slot,
+            pin => $pin,
+            id => $_,
+            (defined $file_pin ? (file_pin => $file_pin) : ())
+        });
+    }
+    
+    my $softhsm = Lim::Plugin::SoftHSM->Client;
+    weaken($self);
+    $softhsm->ReadExport({
+        key_pair => \@key_pairs
+    }, sub {
+        my ($call, $response) = @_;
+        
+        unless (defined $self) {
+            undef($softhsm);
+            return;
+        }
+        
+        if ($call->Successful) {
+            if (exists $response->{key_pair}) {
+                foreach my $key_pair (ref($response->{key_pair}) eq 'ARRAY' ? @{$response->{key_pair}} : $response->{key_pair}) {
+                    $self->cli->println('Key pair export for id ', $key_pair->{id});
+                    $self->cli->println($key_pair->{content});
+                }
+            }
+            $self->Successful;
+        }
+        else {
+            $self->Error($call->Error);
+        }
+        undef($softhsm);
+    });
+}
+
+=head2 function1
+
+=cut
+
 sub optimize {
     my ($self, $cmd) = @_;
     my ($pin);

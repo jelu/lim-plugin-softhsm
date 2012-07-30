@@ -473,9 +473,72 @@ sub CreateImport {
 =cut
 
 sub ReadExport {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
     
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{softhsm}) {
+        $self->Error($cb, 'No "softhsm" executable found or unsupported version, unable to continue');
+        return;
+    }
+    
+    my @key_pairs = ref($q->{key_pair}) eq 'ARRAY' ? @{$q->{key_pair}} : ($q->{key_pair});
+    my @exports;
+
+    weaken($self);
+    my $cmd_cb; $cmd_cb = sub {
+        if (my $key_pair = shift(@key_pairs)) {
+            my $tmp = Lim::Util::TempFile;
+            my ($stdout, $stderr);
+            Lim::Util::run_cmd
+                [
+                    'softhsm',
+                    '--export', $tmp->filename,
+                    '--slot', $key_pair->{slot},
+                    '--pin', $key_pair->{pin},
+                    '--id', $key_pair->{id},
+                    (exists $key_pair->{file_pin} ? ('--file-pin', $key_pair->{file_pin}) : ())
+                ],
+                '<', '/dev/null',
+                '>', sub {
+                    if (defined $_[0]) {
+                        $cb->reset_timeout;
+                        $stdout .= $_[0];
+                    }
+                },
+                '2>', \$stderr,
+                timeout => 10,
+                cb => sub {
+                    unless (defined $self) {
+                        return;
+                    }
+                    if (shift->recv) {
+                        $self->Error($cb, 'Unable to export key_pair id ', $key_pair->{id});
+                    }
+                    elsif (defined (my $content = Lim::Util::FileReadContent($tmp->filename))) {
+                        push(@exports, {
+                            id => $key_pair->{id},
+                            content => $content
+                        });
+                        $cmd_cb->();
+                    }
+                    else {
+                        $self->Error($cb, 'Unable to read export key_pair id ', $key_pair->{id}, ' file ', $tmp->filename);
+                    }
+                };
+        }
+        else {
+            if (scalar @exports == 1) {
+                $self->Successful($cb, { key_pair => $exports[0] });
+            }
+            elsif (scalar @exports) {
+                $self->Successful($cb, { key_pair => \@exports });
+            }
+            else {
+                $self->Successful($cb);
+            }
+            undef($cmd_cb);
+        }
+    };
+    $cmd_cb->();
 }
 
 =head2 function1
