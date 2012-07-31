@@ -469,6 +469,106 @@ sub optimize {
     });
 }
 
+=head2 function1
+
+=cut
+
+sub trust {
+    my ($self, $cmd) = @_;
+    my ($slot, $so_pin, $type, $id, $label);
+    my ($getopt, $args) = Getopt::Long::GetOptionsFromString($cmd,
+        'slot=s' => \$slot,
+        'so-pin=s' => \$so_pin,
+        'type=s' => \$type,
+        'id:s' => \$id,
+        'label:s' => \$label
+    );
+    
+    unless ($getopt and defined $slot and defined $so_pin and defined $type and (defined $id or defined $label)) {
+        $self->Error;
+        return;
+    }
+
+    my $softhsm = Lim::Plugin::SoftHSM->Client;
+    weaken($self);
+    $softhsm->UpdateTrusted({
+        key_pair => {
+            trusted => 'true',
+            slot => $slot,
+            so_pin => $so_pin,
+            type => $type,
+            (defined $id ? (id => $id) : ()),
+            (defined $label ? (label => $label) : ())
+        }
+    }, sub {
+        my ($call, $response) = @_;
+        
+        unless (defined $self) {
+            undef($softhsm);
+            return;
+        }
+        
+        if ($call->Successful) {
+            $self->cli->println('Key pair marked trusted');
+            $self->Successful;
+        }
+        else {
+            $self->Error($call->Error);
+        }
+        undef($softhsm);
+    });
+}
+
+=head2 function1
+
+=cut
+
+sub untrust {
+    my ($self, $cmd) = @_;
+    my ($slot, $so_pin, $type, $id, $label);
+    my ($getopt, $args) = Getopt::Long::GetOptionsFromString($cmd,
+        'slot=s' => \$slot,
+        'so-pin=s' => \$so_pin,
+        'type=s' => \$type,
+        'id:s' => \$id,
+        'label:s' => \$label
+    );
+    
+    unless ($getopt and defined $slot and defined $so_pin and defined $type and (defined $id or defined $label)) {
+        $self->Error;
+        return;
+    }
+
+    my $softhsm = Lim::Plugin::SoftHSM->Client;
+    weaken($self);
+    $softhsm->UpdateTrusted({
+        key_pair => {
+            trusted => 'false',
+            slot => $slot,
+            so_pin => $so_pin,
+            type => $type,
+            (defined $id ? (id => $id) : ()),
+            (defined $label ? (label => $label) : ())
+        }
+    }, sub {
+        my ($call, $response) = @_;
+        
+        unless (defined $self) {
+            undef($softhsm);
+            return;
+        }
+        
+        if ($call->Successful) {
+            $self->cli->println('Key pair marked unstrusted');
+            $self->Successful;
+        }
+        else {
+            $self->Error($call->Error);
+        }
+        undef($softhsm);
+    });
+}
+
 =head1 AUTHOR
 
 Jerry Lundström, C<< <lundstrom.jerry at gmail.com> >>

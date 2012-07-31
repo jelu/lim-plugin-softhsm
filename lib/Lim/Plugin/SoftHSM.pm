@@ -171,8 +171,8 @@ sub Calls {
                     slot => 'integer',
                     so_pin => 'string',
                     type => 'string',
-                    label => 'string',
-                    id => 'string'
+                    label => 'string optional',
+                    id => 'string optional'
                 }
             }
         }
@@ -199,7 +199,9 @@ sub Commands {
         },
         import => 1,
         export => 1,
-        optimize => 1
+        optimize => 1,
+        trust => 1,
+        untrust => 1
     };
 }
 

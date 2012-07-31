@@ -651,9 +651,68 @@ sub UpdateOptimize {
 =cut
 
 sub UpdateTrusted {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
     
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{softhsm}) {
+        $self->Error($cb, 'No "softhsm" executable found or unsupported version, unable to continue');
+        return;
+    }
+    
+    my @key_pairs = ref($q->{key_pair}) eq 'ARRAY' ? @{$q->{key_pair}} : ($q->{key_pair});
+
+    weaken($self);
+    my $cmd_cb; $cmd_cb = sub {
+        if (my $key_pair = shift(@key_pairs)) {
+            unless (exists $key_pair->{id} or exists $key_pair->{label}) {
+                $self->Error($cb, 'Unable to mark key pair trusted, no id or label given');
+                return;
+            }
+            if (exists $key_pair->{id} and exists $key_pair->{label}) {
+                $self->Error($cb, 'Unable to mark key pair trusted, both id and label given');
+                return;
+            }
+            
+            my ($stdout, $stderr);
+            Lim::Util::run_cmd
+                [
+                    'softhsm',
+                    '--trusted', $key_pair->{trusted} ? 'true' : 'false',
+                    '--slot', $key_pair->{slot},
+                    '--so-pin', $key_pair->{so_pin},
+                    '--type', $key_pair->{type},
+                    (exists $key_pair->{id} ? ('--id', $key_pair->{id}) : ()),
+                    (exists $key_pair->{label} ? ('--label', $key_pair->{label}) : ())
+                ],
+                '<', '/dev/null',
+                '>', sub {
+                    if (defined $_[0]) {
+                        $cb->reset_timeout;
+                        $stdout .= $_[0];
+                    }
+                },
+                '2>', \$stderr,
+                timeout => 10,
+                cb => sub {
+                    unless (defined $self) {
+                        return;
+                    }
+                    if (shift->recv) {
+                        $self->Error($cb, 'Unable to mark key pair ',
+                            (exists $key_pair->{id} ? ('id ', $key_pair->{id}) : ()),
+                            (exists $key_pair->{label} ? ('label ', $key_pair->{label}) : ()),
+                            ' trusted ',
+                            $key_pair->{trusted} ? 'true' : 'false');
+                        return;
+                    }
+                    $cmd_cb->();
+                };
+        }
+        else {
+            $self->Successful($cb);
+            undef($cmd_cb);
+        }
+    };
+    $cmd_cb->();
 }
 
 =head1 AUTHOR
