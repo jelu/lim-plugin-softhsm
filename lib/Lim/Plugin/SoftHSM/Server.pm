@@ -463,9 +463,61 @@ sub CreateInitToken {
 =cut
 
 sub CreateImport {
-    my ($self, $cb) = @_;
+    my ($self, $cb, $q) = @_;
     
-    $self->Error($cb, 'Not Implemented');
+    unless ($self->{bin}->{softhsm}) {
+        $self->Error($cb, 'No "softhsm" executable found or unsupported version, unable to continue');
+        return;
+    }
+    
+    my @key_pairs = ref($q->{key_pair}) eq 'ARRAY' ? @{$q->{key_pair}} : ($q->{key_pair});
+
+    weaken($self);
+    my $cmd_cb; $cmd_cb = sub {
+        if (my $key_pair = shift(@key_pairs)) {
+            my $tmp = Lim::Util::FileWriteContent($key_pair->{content});
+            unless (defined $tmp) {
+                $self->Error($cb, 'Unable to write content key pair id ', $key_pair->{id}, ' to a file');
+                return;
+            }
+            my ($stdout, $stderr);
+            Lim::Util::run_cmd
+                [
+                    'softhsm',
+                    '--import', $tmp->filename,
+                    '--slot', $key_pair->{slot},
+                    '--pin', $key_pair->{pin},
+                    '--label', $key_pair->{label},
+                    '--id', $key_pair->{id},
+                    (exists $key_pair->{file_pin} ? ('--file-pin', $key_pair->{file_pin}) : ())
+                ],
+                '<', '/dev/null',
+                '>', sub {
+                    if (defined $_[0]) {
+                        $cb->reset_timeout;
+                        $stdout .= $_[0];
+                    }
+                },
+                '2>', \$stderr,
+                timeout => 10,
+                cb => sub {
+                    undef($tmp);
+                    unless (defined $self) {
+                        return;
+                    }
+                    if (shift->recv) {
+                        $self->Error($cb, 'Unable to import key_pair id ', $key_pair->{id});
+                        return;
+                    }
+                    $cmd_cb->();
+                };
+        }
+        else {
+            $self->Successful($cb);
+            undef($cmd_cb);
+        }
+    };
+    $cmd_cb->();
 }
 
 =head2 function1

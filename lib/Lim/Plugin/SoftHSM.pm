@@ -128,7 +128,8 @@ sub Calls {
             in => {
                 key_pair => {
                     '' => 'required',
-                    file_pin => 'string',
+                    content => 'string',
+                    file_pin => 'string optional',
                     slot => 'integer',
                     pin => 'string',
                     label => 'string',
@@ -196,6 +197,7 @@ sub Commands {
         init => {
             token => 1
         },
+        import => 1,
         export => 1,
         optimize => 1
     };

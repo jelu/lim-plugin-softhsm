@@ -7,6 +7,8 @@ use Scalar::Util qw(weaken);
 
 use Lim::Plugin::SoftHSM ();
 
+use Lim::Util ();
+
 use base qw(Lim::Component::CLI);
 
 =head1 NAME
@@ -311,34 +313,86 @@ sub init {
 
 =cut
 
-sub export {
+sub import {
     my ($self, $cmd) = @_;
-    my ($slot, $pin, $file_pin);
+    my ($slot, $pin, $label, $id, $file_pin);
     my ($getopt, $args) = Getopt::Long::GetOptionsFromString($cmd,
         'slot=s' => \$slot,
         'pin=s' => \$pin,
+        'label=s' => \$label,
+        'id=s' => \$id,
         'file-pin:s' => \$file_pin
     );
     
-    unless ($getopt and scalar @$args and defined $slot and defined $pin) {
+    unless ($getopt and scalar @$args == 1 and defined $slot and defined $pin and defined $label and defined $id) {
         $self->Error;
         return;
     }
 
-    my @key_pairs;
-    foreach (@$args) {
-        push(@key_pairs, {
+    my $content = Lim::Util::FileReadContent($args->[0]);
+    unless (defined $content) {
+        $self->Error;
+        return;
+    }
+
+    my $softhsm = Lim::Plugin::SoftHSM->Client;
+    weaken($self);
+    $softhsm->CreateImport({
+        key_pair => {
+            content => $content,
             slot => $slot,
             pin => $pin,
-            id => $_,
+            label => $label,
+            id => $id,
             (defined $file_pin ? (file_pin => $file_pin) : ())
-        });
-    }
+        }
+    }, sub {
+        my ($call, $response) = @_;
+        
+        unless (defined $self) {
+            undef($softhsm);
+            return;
+        }
+        
+        if ($call->Successful) {
+            $self->cli->println('Key pair imported');
+            $self->Successful;
+        }
+        else {
+            $self->Error($call->Error);
+        }
+        undef($softhsm);
+    });
+}
+
+=head2 function1
+
+=cut
+
+sub export {
+    my ($self, $cmd) = @_;
+    my ($slot, $pin, $id, $file_pin);
+    my ($getopt, $args) = Getopt::Long::GetOptionsFromString($cmd,
+        'slot=s' => \$slot,
+        'pin=s' => \$pin,
+        'id=s' => \$id,
+        'file-pin:s' => \$file_pin
+    );
     
+    unless ($getopt and scalar @$args == 1 and defined $slot and defined $pin and defined $id) {
+        $self->Error;
+        return;
+    }
+
     my $softhsm = Lim::Plugin::SoftHSM->Client;
     weaken($self);
     $softhsm->ReadExport({
-        key_pair => \@key_pairs
+        key_pair => {
+            slot => $slot,
+            pin => $pin,
+            id => $id,
+            (defined $file_pin ? (file_pin => $file_pin) : ())
+        }
     }, sub {
         my ($call, $response) = @_;
         
@@ -350,8 +404,13 @@ sub export {
         if ($call->Successful) {
             if (exists $response->{key_pair}) {
                 foreach my $key_pair (ref($response->{key_pair}) eq 'ARRAY' ? @{$response->{key_pair}} : $response->{key_pair}) {
-                    $self->cli->println('Key pair export for id ', $key_pair->{id});
-                    $self->cli->println($key_pair->{content});
+                    if (Lim::Util::FileWriteContent($args->[0], $key_pair->{content})) {
+                        $self->cli->println('Key pair exported to file ', $args->[0]);
+                    }
+                    else {
+                        $self->cli->println('Unable to write key pair content to file ', $args->[0]);
+                    }
+                    last;
                 }
             }
             $self->Successful;
