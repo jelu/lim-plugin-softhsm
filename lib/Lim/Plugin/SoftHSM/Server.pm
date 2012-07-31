@@ -408,6 +408,10 @@ sub CreateInitToken {
     if (scalar @tokens) {
         weaken($self);
         my $cmd_cb; $cmd_cb = sub {
+            unless (defined $self) {
+                undef($cmd_cb);
+                return;
+            }
             if (my $token = shift(@tokens)) {
                 my ($stdout, $stderr);
                 unless (length($token->{so_pin}) >= 4 and length($token->{so_pin}) <= 255) {
@@ -478,6 +482,10 @@ sub CreateImport {
 
     weaken($self);
     my $cmd_cb; $cmd_cb = sub {
+        unless (defined $self) {
+            undef($cmd_cb);
+            return;
+        }
         if (my $key_pair = shift(@key_pairs)) {
             my $tmp = Lim::Util::FileWriteContent($key_pair->{content});
             unless (defined $tmp) {
@@ -544,6 +552,10 @@ sub ReadExport {
 
     weaken($self);
     my $cmd_cb; $cmd_cb = sub {
+        unless (defined $self) {
+            undef($cmd_cb);
+            return;
+        }
         if (my $key_pair = shift(@key_pairs)) {
             my $tmp = Lim::Util::TempFile;
             my ($stdout, $stderr);
@@ -619,6 +631,10 @@ sub UpdateOptimize {
 
     weaken($self);
     my $cmd_cb; $cmd_cb = sub {
+        unless (defined $self) {
+            undef($cmd_cb);
+            return;
+        }
         if (my $slot = shift(@slots)) {
             my ($stdout, $stderr);
             Lim::Util::run_cmd
@@ -674,6 +690,10 @@ sub UpdateTrusted {
 
     weaken($self);
     my $cmd_cb; $cmd_cb = sub {
+        unless (defined $self) {
+            undef($cmd_cb);
+            return;
+        }
         if (my $key_pair = shift(@key_pairs)) {
             unless (exists $key_pair->{id} or exists $key_pair->{label}) {
                 $self->Error($cb, 'Unable to mark key pair trusted, no id or label given');
