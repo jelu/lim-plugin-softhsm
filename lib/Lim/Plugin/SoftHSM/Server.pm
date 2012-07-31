@@ -412,10 +412,12 @@ sub CreateInitToken {
                 my ($stdout, $stderr);
                 unless (length($token->{so_pin}) >= 4 and length($token->{so_pin}) <= 255) {
                     $self->Error($cb, 'Unable to create token ', $token->{label}, ': so_pin not between 4 and 255 characters');
+                    undef($cmd_cb);
                     return;
                 }
                 unless (length($token->{pin}) >= 4 and length($token->{pin}) <= 255) {
                     $self->Error($cb, 'Unable to create token ', $token->{label}, ': pin not between 4 and 255 characters');
+                    undef($cmd_cb);
                     return;
                 }
                 Lim::Util::run_cmd
@@ -438,10 +440,12 @@ sub CreateInitToken {
                     timeout => 10,
                     cb => sub {
                         unless (defined $self) {
+                            undef($cmd_cb);
                             return;
                         }
                         if (shift->recv) {
                             $self->Error($cb, 'Unable to create token ', $token->{label});
+                            undef($cmd_cb);
                             return;
                         }
                         $cmd_cb->();
@@ -478,6 +482,7 @@ sub CreateImport {
             my $tmp = Lim::Util::FileWriteContent($key_pair->{content});
             unless (defined $tmp) {
                 $self->Error($cb, 'Unable to write content key pair id ', $key_pair->{id}, ' to a file');
+                undef($cmd_cb);
                 return;
             }
             my ($stdout, $stderr);
@@ -503,10 +508,12 @@ sub CreateImport {
                 cb => sub {
                     undef($tmp);
                     unless (defined $self) {
+                        undef($cmd_cb);
                         return;
                     }
                     if (shift->recv) {
                         $self->Error($cb, 'Unable to import key_pair id ', $key_pair->{id});
+                        undef($cmd_cb);
                         return;
                     }
                     $cmd_cb->();
@@ -560,10 +567,12 @@ sub ReadExport {
                 timeout => 10,
                 cb => sub {
                     unless (defined $self) {
+                        undef($cmd_cb);
                         return;
                     }
                     if (shift->recv) {
                         $self->Error($cb, 'Unable to export key_pair id ', $key_pair->{id});
+                        undef($cmd_cb);
                     }
                     elsif (defined (my $content = Lim::Util::FileReadContent($tmp->filename))) {
                         push(@exports, {
@@ -574,6 +583,7 @@ sub ReadExport {
                     }
                     else {
                         $self->Error($cb, 'Unable to read export key_pair id ', $key_pair->{id}, ' file ', $tmp->filename);
+                        undef($cmd_cb);
                     }
                 };
         }
@@ -629,10 +639,12 @@ sub UpdateOptimize {
                 timeout => 10,
                 cb => sub {
                     unless (defined $self) {
+                        undef($cmd_cb);
                         return;
                     }
                     if (shift->recv) {
                         $self->Error($cb, 'Unable to optimize softhsm');
+                        undef($cmd_cb);
                         return;
                     }
                     $cmd_cb->();
@@ -665,10 +677,12 @@ sub UpdateTrusted {
         if (my $key_pair = shift(@key_pairs)) {
             unless (exists $key_pair->{id} or exists $key_pair->{label}) {
                 $self->Error($cb, 'Unable to mark key pair trusted, no id or label given');
+                undef($cmd_cb);
                 return;
             }
             if (exists $key_pair->{id} and exists $key_pair->{label}) {
                 $self->Error($cb, 'Unable to mark key pair trusted, both id and label given');
+                undef($cmd_cb);
                 return;
             }
             
@@ -694,6 +708,7 @@ sub UpdateTrusted {
                 timeout => 10,
                 cb => sub {
                     unless (defined $self) {
+                        undef($cmd_cb);
                         return;
                     }
                     if (shift->recv) {
@@ -702,6 +717,7 @@ sub UpdateTrusted {
                             (exists $key_pair->{label} ? ('label ', $key_pair->{label}) : ()),
                             ' trusted ',
                             $key_pair->{trusted} ? 'true' : 'false');
+                        undef($cmd_cb);
                         return;
                     }
                     $cmd_cb->();
