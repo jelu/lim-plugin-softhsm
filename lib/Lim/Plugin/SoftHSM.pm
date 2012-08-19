@@ -5,6 +5,8 @@ use Carp;
 
 use base qw(Lim::Component);
 
+=encoding utf8
+
 =head1 NAME
 
 Lim::Plugin::SoftHSM - SoftHSM management plugin for Lim
