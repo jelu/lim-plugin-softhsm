@@ -17,11 +17,26 @@ use base qw(Lim::Component::Server);
 
 =head1 NAME
 
-...
+Lim::Plugin::SoftHSM::Server - Server class for SoftHSM management plugin
 
 =head1 VERSION
 
 See L<Lim::Plugin::SoftHSM> for version.
+
+=cut
+
+our $VERSION = $Lim::Plugin::SoftHSM::VERSION;
+
+=head1 SYNOPSIS
+
+  use Lim::Plugin::SoftHSM;
+
+  # Create a Server object
+  $client = Lim::Plugin::SoftHSM->Server;
+
+=head1 CONFIGURATION
+
+TODO
 
 =cut
 
@@ -36,16 +51,6 @@ our %ConfigFiles = (
 
 sub SOFTHSM_VERSION_MIN (){ 1003000 }
 sub SOFTHSM_VERSION_MAX (){ 1003003 }
-
-=head1 SYNOPSIS
-
-...
-
-=head1 SUBROUTINES/METHODS
-
-=head2 function1
-
-=cut
 
 sub Init {
     my $self = shift;
@@ -89,14 +94,24 @@ sub Init {
     }
 }
 
-=head2 function1
-
-=cut
-
 sub Destroy {
 }
 
-=head2 function1
+=head1 INTERNAL METHODS
+
+These are only internal methods and should not be used externally.
+
+=over 4
+
+=item $server->_ScanConfig
+
+Scan for SoftHSM configuration files and return a hash reference.
+
+  $hash_ref->{<full path file name>} = {
+      name => <full path file name>,
+      write => <true if writable>,
+      read => <true if readable>
+  };
 
 =cut
 
@@ -135,7 +150,20 @@ sub _ScanConfig {
     return \%file;
 }
 
-=head2 function1
+=back
+
+=head1 METHODS
+
+These methods are called from the Lim framework and should not be used else
+where.
+
+Please see L<Lim::Plugin::SoftHSM> for full documentation of calls.
+
+=over 4
+
+=item $server->ReadVersion(...)
+
+Get the version of the plugin and version of SoftHSM found.
 
 =cut
 
@@ -155,7 +183,9 @@ sub ReadVersion {
     }
 }
 
-=head2 function1
+=item $server->ReadConfigs(...)
+
+Get a list of all config files that can be managed by this plugin.
 
 =cut
 
@@ -168,7 +198,9 @@ sub ReadConfigs {
     });
 }
 
-=head2 function1
+=item $server->CreateConfig(...)
+
+Create a new config file.
 
 =cut
 
@@ -178,7 +210,9 @@ sub CreateConfig {
     $self->Error($cb, 'Not Implemented');
 }
 
-=head2 function1
+=item $server->ReadConfig(...)
+
+Returns a config file as a content.
 
 =cut
 
@@ -227,7 +261,9 @@ sub ReadConfig {
     $self->Successful($cb, $result);
 }
 
-=head2 function1
+=item $server->UpdateConfig(...)
+
+Update a config file, this will overwrite the file.
 
 =cut
 
@@ -288,7 +324,9 @@ sub UpdateConfig {
     $self->Successful($cb);
 }
 
-=head2 function1
+=item $server->DeleteConfig(...)
+
+Delete a config file.
 
 =cut
 
@@ -298,7 +336,9 @@ sub DeleteConfig {
     $self->Error($cb, 'Not Implemented');
 }
 
-=head2 function1
+=item $server->ReadShowSlots(...)
+
+Get a list of all SoftHSM slots that are available.
 
 =cut
 
@@ -394,7 +434,9 @@ sub ReadShowSlots {
         };
 }
 
-=head2 function1
+=item $server->CreateInitToken(...)
+
+Initialize a slot.
 
 =cut
 
@@ -468,7 +510,9 @@ sub CreateInitToken {
     $self->Successful($cb);
 }
 
-=head2 function1
+=item $server->CreateImport(...)
+
+Import a key into a slot.
 
 =cut
 
@@ -537,7 +581,9 @@ sub CreateImport {
     $cmd_cb->();
 }
 
-=head2 function1
+=item $server->ReadExport(...)
+
+Export a key from a slot.
 
 =cut
 
@@ -617,7 +663,9 @@ sub ReadExport {
     $cmd_cb->();
 }
 
-=head2 function1
+=item $server->UpdateOptimize(...)
+
+Optimize the SoftHSM database.
 
 =cut
 
@@ -676,7 +724,9 @@ sub UpdateOptimize {
     $cmd_cb->();
 }
 
-=head2 function1
+=item $server->UpdateTrusted(...)
+
+Update the trusted status of a key.
 
 =cut
 
@@ -752,6 +802,8 @@ sub UpdateTrusted {
     };
     $cmd_cb->();
 }
+
+=back
 
 =head1 AUTHOR
 
