@@ -40,14 +40,24 @@ This plugin lets you manage a SoftHSM installation via Lim.
 
 =over 4
 
-=item $module_name = Lim::Plugin::SoftHSM->Module
+=item $plugin_name = Lim::Plugin::SoftHSM->Name
 
-Returns module name.
+Returns the plugin's name.
 
 =cut
 
-sub Module {
+sub Name {
     'SoftHSM';
+}
+
+=item $plugin_description = Lim::Plugin::SoftHSM->Description
+
+Returns the plugin's description.
+
+=cut
+
+sub Description {
+    'This plugin lets you manage a SoftHSM installation via Lim.';
 }
 
 =item $call_hash_ref = Lim::Plugin::SoftHSM->Calls
