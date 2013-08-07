@@ -11,9 +11,11 @@ use Lim::Util ();
 
 use base qw(Lim::Component::CLI);
 
+=encoding utf8
+
 =head1 NAME
 
-...
+Lim::Plugin::SoftHSM::CLI - CLI class for SoftHSM management plugin
 
 =head1 VERSION
 
@@ -25,11 +27,23 @@ our $VERSION = $Lim::Plugin::SoftHSM::VERSION;
 
 =head1 SYNOPSIS
 
-...
+  use Lim::Plugin::SoftHSM;
 
-=head1 SUBROUTINES/METHODS
+  # Create a CLI object
+  $client = Lim::Plugin::SoftHSM->CLI;
 
-=head2 function1
+=head1 METHODS
+
+These methods are called from the Lim framework and should not be used else
+where.
+
+Please see L<Lim::Plugin::SoftHSM> for full documentation of calls.
+
+=over 4
+
+=item version
+
+Show version of the plugin and SoftHSM.
 
 =cut
 
@@ -63,7 +77,10 @@ sub version {
     });
 }
 
-=head2 function1
+
+=item configs
+
+List configuration files.
 
 =cut
 
@@ -100,7 +117,13 @@ sub configs {
     });
 }
 
-=head2 function1
+=item config view <file>
+
+Display the content of a configuration file.
+
+=item config edit <file>
+
+Edit a configuration file.
 
 =cut
 
@@ -214,7 +237,9 @@ sub config {
     $self->Error;
 }
 
-=head2 function1
+=item show slots
+
+List information about SoftHSM slots.
 
 =cut
 
@@ -263,7 +288,9 @@ sub show {
     $self->Error;
 }
 
-=head2 function1
+=item init token <slot> <label> <SO pin> <pin>
+
+Initialize a slot.
 
 =cut
 
@@ -309,7 +336,9 @@ sub init {
     $self->Error;
 }
 
-=head2 function1
+=item import [--slot <slot>] [--pin <pin>] [--id <id>] [--label <label>] [--file-pin <file pin>] <file>
+
+Import a key into SoftHSM from a local file.
 
 =cut
 
@@ -365,7 +394,9 @@ sub import {
     });
 }
 
-=head2 function1
+=item export [--slot <slot>] [--pin <pin>] [--id <id>] [--file-pin <file pin>] <file>
+
+Export a key from SoftHSM into a local file.
 
 =cut
 
@@ -422,7 +453,9 @@ sub export {
     });
 }
 
-=head2 function1
+=item optimize [--pin <pin>] <slots ... >
+
+Optimize slot(s).
 
 =cut
 
@@ -469,7 +502,9 @@ sub optimize {
     });
 }
 
-=head2 function1
+=item trust [--slot <slot>] [--so-pin <SO pin>] [--type <type>] < --id <id> | --label <label> >
+
+Mark a key as trusted.
 
 =cut
 
@@ -519,7 +554,9 @@ sub trust {
     });
 }
 
-=head2 function1
+=item untrust [--slot <slot>] [--so-pin <SO pin>] [--type <type>] < --id <id> | --label <label> >
+
+Remove the trusted marking on a key.
 
 =cut
 
@@ -569,6 +606,8 @@ sub untrust {
     });
 }
 
+=back
+
 =head1 AUTHOR
 
 Jerry Lundström, C<< <lundstrom.jerry at gmail.com> >>
@@ -597,7 +636,7 @@ L<https://github.com/jelu/lim-plugin-softhsm/issues>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2012 Jerry Lundström.
+Copyright 2012-2013 Jerry Lundström.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published

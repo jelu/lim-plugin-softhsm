@@ -2,11 +2,15 @@ package Lim::Plugin::SoftHSM::Client;
 
 use common::sense;
 
+use Lim::Plugin::SoftHSM ();
+
 use base qw(Lim::Component::Client);
+
+=encoding utf8
 
 =head1 NAME
 
-...
+Lim::Plugin::SoftHSM::Client - Client class for SoftHSM management plugin
 
 =head1 VERSION
 
@@ -14,17 +18,20 @@ See L<Lim::Plugin::SoftHSM> for version.
 
 =cut
 
-our $VERSION = '0.1';
+our $VERSION = $Lim::Plugin::SoftHSM::VERSION;
 
 =head1 SYNOPSIS
 
-...
+  use Lim::Plugin::SoftHSM;
 
-=head1 SUBROUTINES/METHODS
+  # Create a Client object
+  $client = Lim::Plugin::SoftHSM->Client;
 
-=head2 function1
+=head1 METHODS
 
-=cut
+All methods are auto generated from the call definitions.
+
+See L<Lim::Plugin::SoftHSM> for list of calls and arguments.
 
 =head1 AUTHOR
 
@@ -54,7 +61,7 @@ L<https://github.com/jelu/lim-plugin-softhsm/issues>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2012 Jerry Lundström.
+Copyright 2012-2013 Jerry Lundström.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published
