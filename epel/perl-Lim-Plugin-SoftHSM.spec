@@ -1,5 +1,5 @@
 Name:           perl-Lim-Plugin-SoftHSM
-Version:        0.12
+Version:        0.13
 Release:        1%{?dist}
 Summary:        Lim::Plugin::SoftHSM - SoftHSM management plugin for Lim
 
@@ -23,28 +23,28 @@ This plugin lets you manage a SoftHSM installation via Lim.
 %package -n perl-Lim-Plugin-SoftHSM-Common
 Summary: Common perl libraries for SoftHSM Lim plugin
 Group: Development/Libraries
-Version: 0.12
+Version: 0.13
 %description -n perl-Lim-Plugin-SoftHSM-Common
 Common perl libraries for SoftHSM Lim plugin.
 
 %package -n perl-Lim-Plugin-SoftHSM-Server
 Summary: Server perl libraries for SoftHSM Lim plugin
 Group: Development/Libraries
-Version: 0.12
+Version: 0.13
 %description -n perl-Lim-Plugin-SoftHSM-Server
 Server perl libraries for SoftHSM Lim plugin.
 
 %package -n perl-Lim-Plugin-SoftHSM-Client
 Summary: Client perl libraries for SoftHSM Lim plugin
 Group: Development/Libraries
-Version: 0.12
+Version: 0.13
 %description -n perl-Lim-Plugin-SoftHSM-Client
 Client perl libraries for communicating with the SoftHSM Lim plugin.
 
 %package -n perl-Lim-Plugin-SoftHSM-CLI
 Summary: CLI perl libraries for SoftHSM Lim plugin
 Group: Development/Libraries
-Version: 0.12
+Version: 0.13
 %description -n perl-Lim-Plugin-SoftHSM-CLI
 CLI perl libraries for controlling a local or remote SoftHSM installation
 via SoftHSM Lim plugin.
@@ -53,7 +53,7 @@ via SoftHSM Lim plugin.
 Requires: lim-management-console-common >= 0.16
 Summary: SoftHSM Lim plugin Management Console files
 Group: Development/Libraries
-Version: 0.12
+Version: 0.13
 %description -n lim-management-console-softhsm
 SoftHSM Lim plugin Management Console files.
 
@@ -123,6 +123,8 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Wed Aug 07 2013 Jerry Lundström < lundstrom.jerry at gmail.com > - 0.13-1
+- Release 0.13
 * Tue Aug 07 2012 Jerry Lundström < lundstrom.jerry at gmail.com > - 0.12-1
 - Initial package for Fedora
 

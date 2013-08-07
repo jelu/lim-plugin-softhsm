@@ -21,7 +21,7 @@ Description: Common perl libraries for SoftHSM Lim plugin
 Package: liblim-plugin-softhsm-server-perl
 Architecture: all
 Depends: ${misc:Depends}, ${perl:Depends},
- liblim-plugin-softhsm-common-perl (= 0.12-1~unstable+1),
+ liblim-plugin-softhsm-common-perl (= 0.13-1~unstable+1),
  liblim-server-perl (>= 0.16-1~unstable+1)
 Description: Server perl libraries for SoftHSM Lim plugin
  Server perl libraries for SoftHSM Lim plugin.
@@ -29,7 +29,7 @@ Description: Server perl libraries for SoftHSM Lim plugin
 Package: liblim-plugin-softhsm-client-perl
 Architecture: all
 Depends: ${misc:Depends}, ${perl:Depends},
- liblim-plugin-softhsm-common-perl (= 0.12-1~unstable+1)
+ liblim-plugin-softhsm-common-perl (= 0.13-1~unstable+1)
 Description: Client perl libraries for SoftHSM Lim plugin
  Client perl libraries for communicating with the SoftHSM Lim plugin.
 
@@ -37,7 +37,7 @@ Package: liblim-plugin-softhsm-cli-perl
 Architecture: all
 Depends: ${misc:Depends}, ${perl:Depends},
  liblim-cli-perl (>= 0.16-1~unstable+1),
- liblim-plugin-softhsm-client-perl (= 0.12-1~unstable+1)
+ liblim-plugin-softhsm-client-perl (= 0.13-1~unstable+1)
 Description: CLI perl libraries for SoftHSM Lim plugin
  CLI perl libraries for controlling a local or remote SoftHSM installation via
  SoftHSM Lim plugin.
