@@ -38,6 +38,14 @@ our $VERSION = $Lim::Plugin::SoftHSM::VERSION;
 
 TODO
 
+=over 4
+
+=item SOFTHSM_VERSION_MIN
+
+=item SOFTHSM_VERSION_MAX
+
+=back
+
 =cut
 
 our $VERSION = $Lim::Plugin::SoftHSM::VERSION;
@@ -51,6 +59,16 @@ our %ConfigFiles = (
 
 sub SOFTHSM_VERSION_MIN (){ 1003000 }
 sub SOFTHSM_VERSION_MAX (){ 1003003 }
+
+=head1 INTERNAL METHODS
+
+These are only internal methods and should not be used externally.
+
+=over 4
+
+=item Init
+
+=cut
 
 sub Init {
     my $self = shift;
@@ -94,14 +112,12 @@ sub Init {
     }
 }
 
+=item Destroy
+
+=cut
+
 sub Destroy {
 }
-
-=head1 INTERNAL METHODS
-
-These are only internal methods and should not be used externally.
-
-=over 4
 
 =item $server->_ScanConfig
 
