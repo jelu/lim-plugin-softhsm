@@ -1,3 +1,9 @@
+liblim-plugin-softhsm-perl (0.14-1~unstable+1) unstable; urgency=low
+
+  * New release v0.14.
+
+ -- Jerry Lundström <lundstrom.jerry@gmail.com>  Thu, 08 Aug 2013 08:03:29 +0200
+
 liblim-plugin-softhsm-perl (0.13-1~unstable+1) unstable; urgency=low
 
   * New release v0.13.
