@@ -139,7 +139,7 @@ sub Calls {
             out => {
                 slot => {
                     id => 'integer',
-                    token_label => 'string',
+                    token_label => 'string optional',
                     token_present => 'bool',
                     token_initialized => 'bool',
                     user_pin_initialized => 'bool',
